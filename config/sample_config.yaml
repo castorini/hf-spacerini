@@ -1,0 +1,14 @@
+Description: >
+  This document is a sample configuration file that contains
+  sample configurations for your spaces app.
+title: Pyserini
+page_icon: null
+indexes: indexes
+space_sdk: streamlit
+packages:
+  - openjdk-11-jdk
+requirements:
+  - pyserini
+  - faiss-cpu
+  - torch
+app_local_path: apps

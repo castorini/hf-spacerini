@@ -1,9 +1,6 @@
-from typing import List
-
-import requests
-import gradio as gr
 import os
-
+import requests
+from typing import List
 
 from huggingface_hub import (
     create_repo,
