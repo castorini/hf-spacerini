@@ -3,13 +3,9 @@ from pyserini.search.lucene import LuceneSearcher
 import json
 import time
 
-st.set_page_config(page_title="{{title}}", page_icon='{{page_icon}}', layout="centered")
+st.set_page_config(page_title="{{title}}", page_icon='', layout="centered")
 searcher = LuceneSearcher('{{index_path}}')
 
-
-cola, colb, colc = st.columns([5,4,5])
-with colb:
-    st.image("logo.jpeg")
 
 col1, col2 = st.columns([9, 1])
 with col1:
