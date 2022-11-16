@@ -1,10 +1,10 @@
-import streamlit as st
-from pyserini.search.lucene import LuceneSearcher
 import json
 import time
+import streamlit as st
+from pyserini.search.lucene import LuceneSearcher
 
-st.set_page_config(page_title="{{title}}", page_icon='', layout="centered")
 searcher = LuceneSearcher('{{index_path}}')
+st.set_page_config(page_title="{{title}}", page_icon='', layout="centered")
 
 
 col1, col2 = st.columns([9, 1])

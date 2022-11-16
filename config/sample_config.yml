@@ -5,9 +5,11 @@ dependencies:
   - pyserini
   - faiss-cpu
   - torch
-indices: "/Users/mac/Documents/castorini/pyserini/indexes/sample_collection_jsonl"
+indices: "/Users/mac/Documents/castorini/hf-spacerini/apps/Gradio-Pyserini/lucene-index.msmarco-v1-passage.20221004.252b5e"
 packages:
   - openjdk-11-jdk
 page_icon: ð
 space_sdk: streamlit
+space_name: Pyserini
 title: Pyserini
+lang_code: en

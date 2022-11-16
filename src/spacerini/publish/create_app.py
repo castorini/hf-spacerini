@@ -6,6 +6,9 @@ DEFAULT_APP_DIRECTORY="apps"
 TEMPLATE_DIRECTORY="templates"
 
 class StreamlitAppBuilder:
+    """
+    Build a streamlit app from a streamlit application template defined in templates/streamlit/
+    """
     def __init__(self, config_file: str) -> None:
 
         assert(os.path.exists(config_file) == True), "yaml file does not exist"
@@ -15,8 +18,8 @@ class StreamlitAppBuilder:
 
     def _create_app_directory(self) -> str:
         """
-
-        :return:
+        create a local directory to store the application files such as 'app.py', 'requirements.txt'
+        :return :
         """
         app_directory=os.path.join(DEFAULT_APP_DIRECTORY, self.config["title"])
         os.makedirs(app_directory, exist_ok = True)
@@ -56,6 +59,7 @@ class StreamlitAppBuilder:
             content = temp_f.read()
             content = content.replace("{{title}}", self.config['title'])
             content = content.replace("{{page_icon}}", self.config['page_icon'])
+            content = content.replace("{{index_path}}", "indices")
             f.write(content)
 
         print(os.path.join(self.app_directory, "indices"))
@@ -71,13 +75,18 @@ class StreamlitAppBuilder:
             shutil.copytree(source, dst)
         except OSError as exc:
             if exc.errno in (errno.ENOTDIR, errno.EINVAL):
-                shutil.copy(src, dst)
-            else: raise
+                shutil.copy(source, dst)
+            else:
+                print("file exists")
 
+
+class GradioAppBuilder:
+    pass
 
 if __name__ == "__main__":
     builder = StreamlitAppBuilder(config_file="config/sample_config.yml")
     builder.build_app()
+    print(builder.app_directory)
 
 
 
