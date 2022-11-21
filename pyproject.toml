@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=64.0.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "spacerini"
+description = "Hosted indexes with Pyserini and Hugging Face Spaces"
+readme = { file = "README.md", content-type = "text/markdown" }
+maintainers = [
+    { name = "Christopher Akiki", email = "christopher.akiki@gmail.com" },
+    { name = "", email = ""},
+]
+requires-python = ">=3.8"
+dependencies = [
+    'pyserini',
+    'cookiecutter',
+    'huggingface_hub',
+    'tokenizers',
+    'datasets',
+    'streamlit',
+    'gradio',
+    'Click',
+]
+dynamic = [
+  "version",
+]
+classifiers = [
+    'Development Status :: 1 - Planning',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Information Technology',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: Apache Software License',
+    'Programming Language :: Python',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+]
+license = { text = "Apache-2.0" }
+
+[project.optional-dependencies]
+dev = [
+    'pytest',
+]
+
+[project.urls]
+Homepage = "https://github.com/castorini/hf-spacerini"
+
+[project.scripts]
+spacerini = "spacerini:cli:main"
