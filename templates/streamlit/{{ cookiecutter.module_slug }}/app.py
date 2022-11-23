@@ -1,3 +1,4 @@
+# This currently contains Odunayo's template. We need to adapt this to cookiecutter.
 import streamlit as st
 from pyserini.search.lucene import LuceneSearcher
 import json
