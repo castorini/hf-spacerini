@@ -9,7 +9,7 @@ description = "Hosted indexes with Pyserini and Hugging Face Spaces"
 readme = { file = "README.md", content-type = "text/markdown" }
 maintainers = [
     { name = "Christopher Akiki", email = "christopher.akiki@gmail.com" },
-    { name = "", email = ""},
+    #{ name = "", email = ""},
 ]
 requires-python = ">=3.8"
 dependencies = [
@@ -50,4 +50,4 @@ dev = [
 Homepage = "https://github.com/castorini/hf-spacerini"
 
 [project.scripts]
-spacerini = "spacerini:cli:main"
+spacerini = "spacerini.cli:main"
