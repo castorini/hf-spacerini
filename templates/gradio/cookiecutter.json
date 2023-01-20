@@ -1,0 +1,7 @@
+{
+    "space_title": "Search Index",
+    "space_slug": "{{ space_title.|lower|replace(' ', '-') }}",
+    "space_gradio_sdk_version": "3.12.0",
+    "space_license": "apache-2.0",
+    "space_pinned": "false"
+}
