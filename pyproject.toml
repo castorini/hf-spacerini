@@ -21,6 +21,8 @@ dependencies = [
     'streamlit',
     'gradio',
     'Click',
+    'torch',
+    'faiss-cpu',
 ]
 dynamic = [
   "version",

@@ -1,3 +1,4 @@
 pyserini
+datasets
 faiss-cpu
 torch
