@@ -1,1 +1,1 @@
-from . import index, preprocess, app, search
+from . import index, preprocess, frontend, search
