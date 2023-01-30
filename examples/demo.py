@@ -5,16 +5,17 @@ from spacerini.preprocess.utils import shard_dataset
 from spacerini.index.index import index_json_shards
 
 DSET = "imdb"
+SPLIT = "train"
 local_app = "gradio_app"
 sdk = "gradio"
 cookiecutter_vars = {
                 "hf_dataset_name": DSET,
-                "hf_dataset_split": "train",
+                "hf_dataset_split": SPLIT,
                 "space_title":"IMDB search",
                 "local_app":local_app
                 }
 create_app(template=sdk, extra_context_dict=cookiecutter_vars, output_dir=".")
-dset = load_dataset(DSET, split="train")
+dset = load_dataset(DSET, split=SPLIT)
 shards_path = f"{DSET}-json-shards"
 shard_dataset(hf_dataset=dset, shard_size="10MB", column_to_index="text", shards_paths=shards_path)
 index_json_shards(shards_path=shards_path, index_path=local_app + "/index", language="en")
