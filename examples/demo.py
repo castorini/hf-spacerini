@@ -8,7 +8,7 @@ DSET = "imdb"
 local_app = "gradio_app"
 sdk = "gradio"
 cookiecutter_vars = {
-                "hf_dataset": DSET,
+                "hf_dataset_name": DSET,
                 "hf_dataset_split": "train",
                 "space_title":"IMDB search",
                 "local_app":local_app
