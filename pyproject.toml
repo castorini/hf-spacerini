@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spacerini"
-description = "Hosted indexes with Pyserini and Hugging Face Spaces"
+description = "Hosted Lucene indexes with Pyserini and Hugging Face Spaces"
 readme = { file = "README.md", content-type = "text/markdown" }
 maintainers = [
     { name = "Christopher Akiki", email = "christopher.akiki@gmail.com" },
@@ -21,6 +21,8 @@ dependencies = [
     'streamlit',
     'gradio',
     'Click',
+    'torch',
+    'faiss-cpu',
 ]
 dynamic = [
   "version",
