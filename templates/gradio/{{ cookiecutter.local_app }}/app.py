@@ -3,7 +3,7 @@ from datasets import load_dataset
 from pyserini.search.lucene import LuceneSearcher
 
 searcher = LuceneSearcher("index")
-ds = load_dataset( "{{ cookiecutter.hf_dataset_name }}", split="{{ cookiecutter.hf_dataset_split }}")
+ds = load_dataset("{{ cookiecutter.hf_dataset_name }}", split="{{ cookiecutter.hf_dataset_split }}")
 
 def search(query):
     hits = searcher.search(query, k=10)
