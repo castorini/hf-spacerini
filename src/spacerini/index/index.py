@@ -15,7 +15,7 @@ def parse_args(
     index_path: str,
     shards_path: str = "",
     fields: List[str] = None,
-    language: str =None,
+    language: str = None,
     pretokenized: bool = False,
     analyzeWithHuggingFaceTokenizer: str = None,
     storePositions: bool = True,
@@ -29,9 +29,21 @@ def parse_args(
     verbose: bool = False,
     quiet: bool = False,
     memory_buffer: str ="4096",
-    n_threads: int = -1,
+    n_threads: int = 5,
     **kwargs
 ):
+    """
+    Parse arguments into list for `SimpleIndexer` class in Anserini.
+    
+    Parameters
+    ----------
+        See io.anserini.IndexCollection.Args for argument definitions
+        https://github.com/castorini/anserini
+
+    Returns
+    -------
+    List of arguments to initialize the `LuceneIndexer`
+    """
     params = locals()
     args = []
     args.extend([
@@ -63,6 +75,7 @@ def parse_args(
 def index_json_shards(
     shards_path: str,
     index_path: str,
+    keep_shards: bool = True,
     fields: List[str] = None,
     language: str = None,
     pretokenized: bool = False,
@@ -79,8 +92,25 @@ def index_json_shards(
     quiet: bool = False,
     memory_buffer: str = "4096",
     n_threads: bool = -1,
-    keep_shards: bool = True
 ):
+    """Index dataset from a directory containing files
+
+    Parameters
+    ----------
+    shards_path : str
+        Path to dataset to index
+    index_path : str
+        Directory to store index
+    keep_shards : bool
+        If False, remove dataset after indexing is complete
+    
+    See io.anserini.IndexCollection.Args for remaining argument definitions
+    https://github.com/castorini/anserini
+
+    Returns
+    -------
+    None
+    """
     args = parse_args(**locals())
     JIndexCollection = autoclass('io.anserini.index.IndexCollection')
     JIndexCollection.main(args)
@@ -89,11 +119,13 @@ def index_json_shards(
 
 
 def index_streaming_hf_dataset(
+    index_path: str,
     ds_path: str,
     split: str,
-    index_path: str,
     column_to_index: str,
-    ds_language_code: str = None,   # For HF Dataset
+    ds_config_name: str = None,   # For HF Dataset
+    num_rows: int = None,
+    disable_tqdm: bool = False,
     language: str = None,
     pretokenized: bool = False,
     analyzeWithHuggingFaceTokenizer: bool = None,
@@ -108,13 +140,35 @@ def index_streaming_hf_dataset(
     verbose: bool = False,
     quiet: bool = False,
     memory_buffer: str = "4096",
-    n_threads: bool = -1,
-    num_rows: int = None,
-    disable_tqdm: bool = False
+    n_threads: bool = 5,
 ):
+    """Stream dataset from HuggingFace Hub & index
+
+    Parameters
+    ----------
+    ds_path : str
+        Name of HuggingFace dataset to stream
+    split : str
+        Split of dataset to index
+    column_to_index : str
+        Column of dataset to index
+    ds_config_name: str
+        Dataset configuration to stream. Usually a language name or code
+    num_rows : str
+        Number of rows in dataset
+    disable_tqdm : bool
+        Disable tqdm output
+    
+    See io.anserini.IndexCollection.Args for remaining argument definitions
+    https://github.com/castorini/anserini
+
+    Returns
+    -------
+    None
+    """
     args = parse_args(**locals())
-    ds = load_dataset(ds_path, name=ds_language_code, split=split, streaming=True)
-    indexer = LuceneIndexer(args)
+    ds = load_dataset(ds_path, name=ds_config_name, split=split, streaming=True)
+    indexer = LuceneIndexer(args=args)
     for i, row in tqdm(enumerate(ds), total=num_rows, disable=disable_tqdm):
         indexer.add(json.dumps({"id": i, "contents": row[column_to_index]}))
     indexer.close()
