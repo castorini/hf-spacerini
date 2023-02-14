@@ -1,6 +1,6 @@
 {
-    "hf_dataset_name": null,
-    "hf_dataset_split": "train",
+    "dset_text_field": null,
+    "metadata_field": null,
     "space_title": null,
     "local_app": "{{ cookiecutter.space_title|lower|replace(' ', '-') }}",
     "space_gradio_sdk_version": "3.12.0",
