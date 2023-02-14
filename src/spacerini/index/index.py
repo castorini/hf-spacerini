@@ -30,15 +30,20 @@ def parse_args(
     quiet: bool = False,
     memory_buffer: str ="4096",
     n_threads: int = 5,
+    for_otf_indexing: bool = False,
     **kwargs
-):
+) -> List[str]:
     """
     Parse arguments into list for `SimpleIndexer` class in Anserini.
     
     Parameters
     ----------
-        See io.anserini.IndexCollection.Args for argument definitions
-        https://github.com/castorini/anserini
+    for_otf_indexing : bool
+        If True, `-input` & `-collection` args are safely ignored.
+        Used when performing on-the-fly indexing with HF Datasets.
+    
+    See `io.anserini.IndexCollection.Args` for other argument definitions
+    https://github.com/castorini/anserini
 
     Returns
     -------
@@ -48,8 +53,8 @@ def parse_args(
     args = []
     args.extend([
         "-input", shards_path,
-        "-threads", f"{n_threads}" if n_threads!=-1 else f"{os.cpu_count()}",
         "-collection", "JsonCollection",
+        "-threads", f"{n_threads}" if n_threads!=-1 else f"{os.cpu_count()}",
         "-generator", "DefaultLuceneDocumentGenerator",
         "-index", index_path,
         "-memorybuffer", memory_buffer,
@@ -69,6 +74,8 @@ def parse_args(
     ]
     args.extend([f"-{flag}" for flag in flags if params[flag]])
     
+    if for_otf_indexing:
+        args = args[4:]
     return args
 
 
@@ -91,7 +98,7 @@ def index_json_shards(
     verbose: bool = False,
     quiet: bool = False,
     memory_buffer: str = "4096",
-    n_threads: bool = -1,
+    n_threads: bool = 5,
 ):
     """Index dataset from a directory containing files
 
@@ -166,7 +173,7 @@ def index_streaming_hf_dataset(
     -------
     None
     """
-    args = parse_args(**locals())
+    args = parse_args(**locals(), for_otf_indexing=True)
     ds = load_dataset(ds_path, name=ds_config_name, split=split, streaming=True)
     indexer = LuceneIndexer(args=args)
     for i, row in tqdm(enumerate(ds), total=num_rows, disable=disable_tqdm):
