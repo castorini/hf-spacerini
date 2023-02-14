@@ -8,8 +8,8 @@ PAGINATION_VISIBLE = True
 NUM_PAGES = 10 # STATIC. THIS CAN'T CHANGE BECAUSE GRADIO CAN'T DYNAMICALLY CREATE COMPONENTS. 
 RESULTS_PER_PAGE = 5 
 
-TEXT_FIELD = {{ cookiecutter.dset_text_field }}
-METADATA_FIELD = {{ cookiecutter.metadata_field }}
+TEXT_FIELD = "{{ cookiecutter.dset_text_field }}"
+METADATA_FIELD = "{{ cookiecutter.metadata_field }}"
 
 def result_html(result, meta):
     return (
