@@ -1,7 +1,7 @@
 from spacerini.frontend.local import create_app
 from spacerini.frontend.space import create_space_from_local
 from datasets import load_dataset
-from spacerini.preprocess.utils import shard_dataset
+from spacerini.preprocess.utils import shard_dataset, get_num_shards
 from spacerini.index.index import index_json_shards
 
 DSET = "imdb"
@@ -14,6 +14,7 @@ SHARDS_PATH = f"{DSET}-json-shards"
 LOCAL_APP = "gradio_app"
 SDK = "gradio"
 ORGANIZATION = "cakiki"
+MAX_ARROW_SHARD_SIZE="1GB"
 
 cookiecutter_vars = {
                 "dset_text_field": COLUMN_TO_INDEX,
@@ -47,9 +48,10 @@ index_json_shards(
     )
 
 dset = dset.add_column("docid", range(len(dset)))
+num_shards = get_num_shards(dset.data.nbytes, MAX_ARROW_SHARD_SIZE)
 dset.remove_columns([c for c in dset.column_names if not c in [COLUMN_TO_INDEX,*METADATA_COLUMNS]]).save_to_disk(
     LOCAL_APP + "/data",
-    max_shard_size="1GB",
+    num_shards=num_shards,
     num_proc=NUM_PROC
     )
 
