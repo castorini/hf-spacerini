@@ -1,1 +1,1 @@
-from . import index, preprocess, frontend, search
+from . import index, preprocess, frontend, search, data
