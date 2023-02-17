@@ -3,12 +3,17 @@ from typing import List
 from typing import Literal
 
 import shutil
-from pyserini.index.lucene import LuceneIndexer
+from pyserini.index.lucene import LuceneIndexer, IndexReader
+from typing import Any, Dict, List, Optional, Union
 from pyserini.pyclass import autoclass
 from datasets import load_dataset
 from tqdm import tqdm
 import json
 import os
+
+"""
+Descritiption of all the params used in this file
+"""
 
 
 def parse_args(
@@ -42,8 +47,7 @@ def parse_args(
         If True, `-input` & `-collection` args are safely ignored.
         Used when performing on-the-fly indexing with HF Datasets.
     
-    See `io.anserini.IndexCollection.Args` for other argument definitions
-    https://github.com/castorini/anserini
+    See [docs](docs/arguments.md) for remaining argument definitions
 
     Returns
     -------
@@ -84,17 +88,17 @@ def index_json_shards(
     index_path: str,
     keep_shards: bool = True,
     fields: List[str] = None,
-    language: str = None,
+    language: str = "en",
     pretokenized: bool = False,
-    analyzeWithHuggingFaceTokenizer: bool = None,
+    analyzeWithHuggingFaceTokenizer: str = None,
     storePositions: bool = True,
     storeDocvectors: bool = False,
     storeContents: bool = False,
     storeRaw: bool = False,
     keepStopwords: bool = False,
     stopwords: str = None,
-    stemmer:  Literal["porter", "krovetz"] = None,
-    optimize: bool = False,
+    stemmer:  Literal["porter", "krovetz"] = "porter",
+    optimize: bool = True,
     verbose: bool = False,
     quiet: bool = False,
     memory_buffer: str = "4096",
@@ -111,8 +115,7 @@ def index_json_shards(
     keep_shards : bool
         If False, remove dataset after indexing is complete
     
-    See io.anserini.IndexCollection.Args for remaining argument definitions
-    https://github.com/castorini/anserini
+    See [docs](../../docs/arguments.md) for remaining argument definitions
 
     Returns
     -------
@@ -131,19 +134,19 @@ def index_streaming_hf_dataset(
     split: str,
     column_to_index: str,
     ds_config_name: str = None,   # For HF Dataset
-    num_rows: int = None,
+    num_rows: int = -1,
     disable_tqdm: bool = False,
-    language: str = None,
+    language: str = "en",
     pretokenized: bool = False,
-    analyzeWithHuggingFaceTokenizer: bool = None,
+    analyzeWithHuggingFaceTokenizer: str = None,
     storePositions: bool = True,
     storeDocvectors: bool = False,
-    storeContents: bool = False,
-    storeRaw: bool = False,
+    storeContents: bool = True,
+    storeRaw: bool = True,
     keepStopwords: bool = False,
     stopwords: str = None,
-    stemmer:  Literal["porter", "krovetz"] = None,
-    optimize: bool = False,
+    stemmer:  Literal["porter", "krovetz"] = "porter",
+    optimize: bool = True,
     verbose: bool = False,
     quiet: bool = False,
     memory_buffer: str = "4096",
@@ -161,13 +164,10 @@ def index_streaming_hf_dataset(
         Column of dataset to index
     ds_config_name: str
         Dataset configuration to stream. Usually a language name or code
-    num_rows : str
+    num_rows : int
         Number of rows in dataset
-    disable_tqdm : bool
-        Disable tqdm output
     
-    See io.anserini.IndexCollection.Args for remaining argument definitions
-    https://github.com/castorini/anserini
+    See [docs](../../docs/arguments.md) for remaining argument definitions
 
     Returns
     -------
@@ -176,6 +176,23 @@ def index_streaming_hf_dataset(
     args = parse_args(**locals(), for_otf_indexing=True)
     ds = load_dataset(ds_path, name=ds_config_name, split=split, streaming=True)
     indexer = LuceneIndexer(args=args)
+    num_rows = len(ds) if num_rows == -1 else num_rows
     for i, row in tqdm(enumerate(ds), total=num_rows, disable=disable_tqdm):
         indexer.add(json.dumps({"id": i, "contents": row[column_to_index]}))
     indexer.close()
+
+
+def fetch_index_stats(index_path: str) -> Dict[str, Any]:
+    """
+    Fetch index statistics
+    index_path : str
+        Path to index directory
+    Returns
+    -------
+    Dictionary of index statistics
+    Dictionary Keys ==> total_terms, documents, unique_terms
+    """
+    assert os.path.exists(index_path), f"Index path {index_path} does not exist"
+    index_reader = IndexReader(index_path)
+    return index_reader.stats()
+
