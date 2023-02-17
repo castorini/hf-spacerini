@@ -18,6 +18,7 @@ dependencies = [
     'huggingface_hub',
     'tokenizers',
     'datasets>=2.8.0',
+    'ir_datasets',
     'streamlit',
     'gradio',
     'torch',
