@@ -130,7 +130,7 @@ def index_json_shards(
         shutil.rmtree(shards_path)
 
 
-def index_streaming_hf_dataset(
+def index_streaming_dataset(
     index_path: str,
     ds_path: str,
     split: str,

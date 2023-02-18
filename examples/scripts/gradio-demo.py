@@ -7,7 +7,7 @@ from spacerini.index.index import index_json_shards
 DSET = "imdb"
 SPLIT = "train"
 SPACE_TITLE = "IMDB search"
-COLUMN_TO_INDEX = ["text"]
+COLUMN_TO_INDEX = "text"
 METADATA_COLUMNS = ["sentiment", "docid"]
 NUM_PROC = 28
 SHARDS_PATH = f"{DSET}-json-shards"
