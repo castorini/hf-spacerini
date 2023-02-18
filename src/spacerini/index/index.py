@@ -6,10 +6,12 @@ import shutil
 from pyserini.index.lucene import LuceneIndexer, IndexReader
 from typing import Any, Dict, List, Optional, Union
 from pyserini.pyclass import autoclass
-from datasets import load_dataset
 from tqdm import tqdm
 import json
 import os
+
+from spacerini.data import load_from_hub, load_from_pandas, load_ir_dataset, load_ir_dataset_streaming, \
+    load_from_local
 
 """
 Descritiption of all the params used in this file
@@ -132,7 +134,8 @@ def index_streaming_hf_dataset(
     index_path: str,
     ds_path: str,
     split: str,
-    column_to_index: str,
+    column_to_index: List[str],
+    doc_id_column: str = None,
     ds_config_name: str = None,   # For HF Dataset
     num_rows: int = -1,
     disable_tqdm: bool = False,
@@ -141,14 +144,14 @@ def index_streaming_hf_dataset(
     analyzeWithHuggingFaceTokenizer: str = None,
     storePositions: bool = True,
     storeDocvectors: bool = False,
-    storeContents: bool = True,
-    storeRaw: bool = True,
+    storeContents: bool = False,
+    storeRaw: bool = False,
     keepStopwords: bool = False,
     stopwords: str = None,
     stemmer:  Literal["porter", "krovetz"] = "porter",
     optimize: bool = True,
     verbose: bool = False,
-    quiet: bool = False,
+    quiet: bool = True,
     memory_buffer: str = "4096",
     n_threads: bool = 5,
 ):
@@ -160,8 +163,10 @@ def index_streaming_hf_dataset(
         Name of HuggingFace dataset to stream
     split : str
         Split of dataset to index
-    column_to_index : str
+    column_to_index : List[str]
         Column of dataset to index
+    doc_id_column : str
+        Column of dataset to use as document ID
     ds_config_name: str
         Dataset configuration to stream. Usually a language name or code
     num_rows : int
@@ -173,12 +178,19 @@ def index_streaming_hf_dataset(
     -------
     None
     """
+    
     args = parse_args(**locals(), for_otf_indexing=True)
-    ds = load_dataset(ds_path, name=ds_config_name, split=split, streaming=True)
+    if os.path.exists(ds_path):
+        ds = load_from_local(ds_path, split=split, streaming=True)
+    else:
+        ds = load_from_hub(ds_path, split=split,config_name=ds_config_name, streaming=True)
+
     indexer = LuceneIndexer(args=args)
-    num_rows = len(ds) if num_rows == -1 else num_rows
+
     for i, row in tqdm(enumerate(ds), total=num_rows, disable=disable_tqdm):
-        indexer.add(json.dumps({"id": i, "contents": row[column_to_index]}))
+        contents = " ".join([row[column] for column in column_to_index])
+        indexer.add(json.dumps({"id": i if not doc_id_column else row[doc_id_column] , "contents": contents}))
+
     indexer.close()
 
 
@@ -195,4 +207,3 @@ def fetch_index_stats(index_path: str) -> Dict[str, Any]:
     assert os.path.exists(index_path), f"Index path {index_path} does not exist"
     index_reader = IndexReader(index_path)
     return index_reader.stats()
-
