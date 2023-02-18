@@ -20,3 +20,6 @@ def load_ir_dataset_streaming(ds_name: str) -> IterableDataset:
 
 def load_from_pandas(df: pd.DataFrame) -> Dataset:
     return Dataset.from_pandas(df)
+
+def load_from_sqlite_table(uri_or_con: str, table_or_query: str) -> Dataset:
+    return Dataset.from_sql(con=uri_or_con, sql=table_or_query)
