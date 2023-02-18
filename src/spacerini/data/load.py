@@ -37,7 +37,7 @@ def load_ir_dataset(dataset_name: str) -> Dataset:
     dataset = ir_datasets.load(dataset_name)
     return Dataset.from_pandas(pd.DataFrame(dataset.docs_iter()))
 
-def load_ir_dataset_low_memory(dataset_name: str, num_proc) -> IterableDataset:
+def load_ir_dataset_low_memory(dataset_name: str, num_proc: int) -> IterableDataset:
     """
     Load dataset from ir_datasets by streaming into a Dataset object. This is slower than first loading the data into a pandas DataFrame but does not require loading the entire ir_dataset into memory. This variant also supports multiprocessing if the data is sharded, and only consumes the generator once then caches it so that future calls are instantaneous.
     
