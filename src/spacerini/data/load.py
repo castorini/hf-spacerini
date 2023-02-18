@@ -37,6 +37,23 @@ def load_ir_dataset(dataset_name: str) -> Dataset:
     dataset = ir_datasets.load(dataset_name)
     return Dataset.from_pandas(pd.DataFrame(dataset.docs_iter()))
 
+def load_ir_dataset_low_memory(dataset_name: str, num_proc) -> IterableDataset:
+    """
+    Load dataset from ir_datasets by streaming into a Dataset object. This is slower than first loading the data into a pandas DataFrame but does not require loading the entire ir_dataset into memory. This variant also supports multiprocessing if the data is sharded, and only consumes the generator once then caches it so that future calls are instantaneous.
+    
+    Parameters
+    ----------
+    dataset_name : str
+        Name of dataset to load
+    num_proc: int
+        Number of processes to use
+    
+    Returns
+    -------
+    Dataset
+    """
+    return Dataset.from_generator(ir_dataset_dict_generator, gen_kwargs={"dataset_name": dataset_name}, num_proc=num_proc)
+
 def load_ir_dataset_streaming(dataset_name: str) -> IterableDataset:
     """
     Load dataset from ir_datasets
@@ -89,12 +106,12 @@ def load_from_hub(dataset_name_or_path: str, split: str, config_name: str=None, 
 
 def load_from_local(dataset_name_or_path: str or List[str], split: str, streaming: bool = True) -> Dataset:
     """
-    Load dataset from local JSONL file
+    Load dataset from local text file. Supports JSON, JSONL, CSV, and TSV.
 
     Parameters
     ----------
     dataset_name_or_path : str
-        Path to JSONL file
+        Path to a .json, .jsonl, .csv, or .tsv file
     streaming : bool
         Whether to load dataset in streaming mode
     
