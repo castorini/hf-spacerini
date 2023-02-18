@@ -11,6 +11,7 @@ def create_space_from_local(
     private: bool=False,
     organization: str=None,
     delete_after_push: bool=False,
+    access_token: str=None,
     ) -> str:
     """
     Create a new space from a local directory.

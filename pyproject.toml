@@ -9,7 +9,8 @@ description = "Hosted Lucene indexes with Pyserini and Hugging Face Spaces"
 readme = { file = "README.md", content-type = "text/markdown" }
 maintainers = [
     { name = "Christopher Akiki", email = "christopher.akiki@gmail.com" },
-    #{ name = "", email = ""},
+    { name = "Ogundepo Odunayo", email = "ogundepoodunayo@gmail.com"},
+    { name = "Akintunde Oladipo", email = "akin.o.oladipo@gmail.com"}
 ]
 requires-python = ">=3.8"
 dependencies = [
