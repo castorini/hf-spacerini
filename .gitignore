@@ -130,4 +130,5 @@ dmypy.json
 
 apps/*
 
-.vscode/*
+.vscode/
+apps/*

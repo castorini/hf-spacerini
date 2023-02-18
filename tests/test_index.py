@@ -2,7 +2,7 @@ import os
 import shutil
 from os import path
 import unittest
-from spacerini.index import fetch_index_stats, index_streaming_hf_dataset
+from spacerini.index import fetch_index_stats, index_streaming_dataset
 from pyserini.search.lucene import LuceneSearcher
 from typing import List
 
@@ -10,7 +10,7 @@ from typing import List
 class TestIndex(unittest.TestCase):
     def setUp(self):
         self.index_path = path.join(path.dirname(__file__), "indexes")
-        self.ds_path = path.join(path.dirname(__file__),"data/sample_documents.jsonl")
+        self.dataset_name_or_path = path.join(path.dirname(__file__),"data/sample_documents.jsonl")
         os.makedirs(self.index_path, exist_ok=True)
 
 
@@ -21,7 +21,7 @@ class TestIndex(unittest.TestCase):
         local_index_path = path.join(self.index_path, "local")
         index_streaming_hf_dataset(
             index_path=local_index_path,
-            ds_path=self.ds_path,
+            dataset_name_or_path=self.dataset_name_or_path,
             split="train",
             column_to_index=["contents"],
             doc_id_column="id",
@@ -50,9 +50,9 @@ class TestIndex(unittest.TestCase):
         Test indexing a dataset from HuggingFace Hub
         """
         hgf_index_path = path.join(self.index_path, "hgf")
-        index_streaming_hf_dataset(
+        index_streaming_dataset(
             index_path=hgf_index_path,
-            ds_path="sciq",
+            dataset_name_or_path="sciq",
             split="test",
             column_to_index=["question", "support"],
             language="en",

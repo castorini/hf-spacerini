@@ -128,11 +128,13 @@ def index_json_shards(
     JIndexCollection.main(args)
     if not keep_shards:
         shutil.rmtree(shards_path)
+    
+    return None
 
 
 def index_streaming_dataset(
     index_path: str,
-    ds_path: str,
+    dataset_name_or_path: str,
     split: str,
     column_to_index: List[str],
     doc_id_column: str = None,
@@ -159,7 +161,7 @@ def index_streaming_dataset(
 
     Parameters
     ----------
-    ds_path : str
+    dataset_name_or_path : str
         Name of HuggingFace dataset to stream
     split : str
         Split of dataset to index
@@ -180,10 +182,10 @@ def index_streaming_dataset(
     """
     
     args = parse_args(**locals(), for_otf_indexing=True)
-    if os.path.exists(ds_path):
-        ds = load_from_local(ds_path, split=split, streaming=True)
+    if os.path.exists(dataset_name_or_path):
+        ds = load_from_local(dataset_name_or_path, split=split, streaming=True)
     else:
-        ds = load_from_hub(ds_path, split=split,config_name=ds_config_name, streaming=True)
+        ds = load_from_hub(dataset_name_or_path, split=split,config_name=ds_config_name, streaming=True)
 
     indexer = LuceneIndexer(args=args)
 
@@ -192,6 +194,8 @@ def index_streaming_dataset(
         indexer.add(json.dumps({"id": i if not doc_id_column else row[doc_id_column] , "contents": contents}))
 
     indexer.close()
+
+    return None
 
 
 def fetch_index_stats(index_path: str) -> Dict[str, Any]:

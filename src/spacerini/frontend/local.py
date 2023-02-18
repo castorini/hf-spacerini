@@ -26,10 +26,12 @@ def create_app(
     None
     """
     cookiecutter(
-        "https://github.com/cakiki/hf-spacerini",
+        "https://github.com/castorini/hf-spacerini",
         directory="templates/" + template,
         no_input=no_input,
         extra_context=extra_context_dict,
         output_dir=output_dir,
         overwrite_if_exists=overwrite_if_exists,
     )
+
+    return None
