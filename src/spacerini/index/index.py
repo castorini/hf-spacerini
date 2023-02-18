@@ -3,12 +3,19 @@ from typing import List
 from typing import Literal
 
 import shutil
-from pyserini.index.lucene import LuceneIndexer
+from pyserini.index.lucene import LuceneIndexer, IndexReader
+from typing import Any, Dict, List, Optional, Union
 from pyserini.pyclass import autoclass
-from datasets import load_dataset
 from tqdm import tqdm
 import json
 import os
+
+from spacerini.data import load_from_hub, load_from_pandas, load_ir_dataset, load_ir_dataset_streaming, \
+    load_from_local
+
+"""
+Descritiption of all the params used in this file
+"""
 
 
 def parse_args(
@@ -42,8 +49,7 @@ def parse_args(
         If True, `-input` & `-collection` args are safely ignored.
         Used when performing on-the-fly indexing with HF Datasets.
     
-    See `io.anserini.IndexCollection.Args` for other argument definitions
-    https://github.com/castorini/anserini
+    See [docs](docs/arguments.md) for remaining argument definitions
 
     Returns
     -------
@@ -84,17 +90,17 @@ def index_json_shards(
     index_path: str,
     keep_shards: bool = True,
     fields: List[str] = None,
-    language: str = None,
+    language: str = "en",
     pretokenized: bool = False,
-    analyzeWithHuggingFaceTokenizer: bool = None,
+    analyzeWithHuggingFaceTokenizer: str = None,
     storePositions: bool = True,
     storeDocvectors: bool = False,
     storeContents: bool = False,
     storeRaw: bool = False,
     keepStopwords: bool = False,
     stopwords: str = None,
-    stemmer:  Literal["porter", "krovetz"] = None,
-    optimize: bool = False,
+    stemmer:  Literal["porter", "krovetz"] = "porter",
+    optimize: bool = True,
     verbose: bool = False,
     quiet: bool = False,
     memory_buffer: str = "4096",
@@ -111,8 +117,7 @@ def index_json_shards(
     keep_shards : bool
         If False, remove dataset after indexing is complete
     
-    See io.anserini.IndexCollection.Args for remaining argument definitions
-    https://github.com/castorini/anserini
+    See [docs](../../docs/arguments.md) for remaining argument definitions
 
     Returns
     -------
@@ -123,29 +128,32 @@ def index_json_shards(
     JIndexCollection.main(args)
     if not keep_shards:
         shutil.rmtree(shards_path)
+    
+    return None
 
 
-def index_streaming_hf_dataset(
+def index_streaming_dataset(
     index_path: str,
-    ds_path: str,
+    dataset_name_or_path: str,
     split: str,
-    column_to_index: str,
+    column_to_index: List[str],
+    doc_id_column: str = None,
     ds_config_name: str = None,   # For HF Dataset
-    num_rows: int = None,
+    num_rows: int = -1,
     disable_tqdm: bool = False,
-    language: str = None,
+    language: str = "en",
     pretokenized: bool = False,
-    analyzeWithHuggingFaceTokenizer: bool = None,
+    analyzeWithHuggingFaceTokenizer: str = None,
     storePositions: bool = True,
     storeDocvectors: bool = False,
     storeContents: bool = False,
     storeRaw: bool = False,
     keepStopwords: bool = False,
     stopwords: str = None,
-    stemmer:  Literal["porter", "krovetz"] = None,
-    optimize: bool = False,
+    stemmer:  Literal["porter", "krovetz"] = "porter",
+    optimize: bool = True,
     verbose: bool = False,
-    quiet: bool = False,
+    quiet: bool = True,
     memory_buffer: str = "4096",
     n_threads: bool = 5,
 ):
@@ -153,29 +161,53 @@ def index_streaming_hf_dataset(
 
     Parameters
     ----------
-    ds_path : str
+    dataset_name_or_path : str
         Name of HuggingFace dataset to stream
     split : str
         Split of dataset to index
-    column_to_index : str
+    column_to_index : List[str]
         Column of dataset to index
+    doc_id_column : str
+        Column of dataset to use as document ID
     ds_config_name: str
         Dataset configuration to stream. Usually a language name or code
-    num_rows : str
+    num_rows : int
         Number of rows in dataset
-    disable_tqdm : bool
-        Disable tqdm output
     
-    See io.anserini.IndexCollection.Args for remaining argument definitions
-    https://github.com/castorini/anserini
+    See [docs](../../docs/arguments.md) for remaining argument definitions
 
     Returns
     -------
     None
     """
+    
     args = parse_args(**locals(), for_otf_indexing=True)
-    ds = load_dataset(ds_path, name=ds_config_name, split=split, streaming=True)
+    if os.path.exists(dataset_name_or_path):
+        ds = load_from_local(dataset_name_or_path, split=split, streaming=True)
+    else:
+        ds = load_from_hub(dataset_name_or_path, split=split,config_name=ds_config_name, streaming=True)
+
     indexer = LuceneIndexer(args=args)
+
     for i, row in tqdm(enumerate(ds), total=num_rows, disable=disable_tqdm):
-        indexer.add(json.dumps({"id": i, "contents": row[column_to_index]}))
+        contents = " ".join([row[column] for column in column_to_index])
+        indexer.add(json.dumps({"id": i if not doc_id_column else row[doc_id_column] , "contents": contents}))
+
     indexer.close()
+
+    return None
+
+
+def fetch_index_stats(index_path: str) -> Dict[str, Any]:
+    """
+    Fetch index statistics
+    index_path : str
+        Path to index directory
+    Returns
+    -------
+    Dictionary of index statistics
+    Dictionary Keys ==> total_terms, documents, unique_terms
+    """
+    assert os.path.exists(index_path), f"Index path {index_path} does not exist"
+    index_reader = IndexReader(index_path)
+    return index_reader.stats()
