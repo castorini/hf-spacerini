@@ -24,8 +24,12 @@ cookiecutter_vars = {
                 "dset_text_field": COLUMN_TO_INDEX,
                 "metadata_field": METADATA_COLUMNS[1],
                 "space_title": SPACE_TITLE,
-                "local_app":LOCAL_APP
+                "local_app":LOCAL_APP,
+                "space_description": "This is a demo of Spacerini using the XSum dataset.",
+                "dataset_name": "xsum"
                 }
+
+
 
 logging.info(f"Creating local app into {LOCAL_APP} directory")
 create_app(
@@ -41,8 +45,8 @@ index_streaming_dataset(
     split=SPLIT,
     column_to_index=COLUMN_TO_INDEX,
     doc_id_column="id",
-    store_contents=True,
-    store_raw=True,
+    storeContents=True,
+    storeRaw=True,
     language="en"
 )
 

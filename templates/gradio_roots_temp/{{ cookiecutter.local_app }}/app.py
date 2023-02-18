@@ -25,25 +25,22 @@ def _load_sparse_searcher(language: str, k1: Optional[float]=None, b: Optional[f
 
 
 def get_docid_html(docid):
-    data_org, dataset, docid = docid.split("/")
-    metadata = roots_datasets[dataset]
-    if metadata.private:
+    if {{ cookiecutter.private }}:
         docid_html = (
             f"<a "
             f'class="underline-on-hover"'
-            f'title="This dataset is private. See the introductory text for more information"'
             f'style="color:#AA4A44;"'
-            f'href="https://huggingface.co/datasets/bigscience-data/{dataset}"'
-            f'target="_blank"><b>🔒{dataset}</b></a><span style="color: #7978FF;">/{docid}</span>'
+            'href="https://huggingface.co/datasets/{{ cookiecutter.emoji }}"'
+            'target="_blank"><b>🔒{{ cookiecutter.dataset_name }}</b></a><span style="color: #7978FF;">/'+f'{docid}</span>'
         )
     else:
         docid_html = (
             f"<a "
             f'class="underline-on-hover"'
-            f'title="This dataset is licensed {metadata.tags[0].split(":")[-1]}"'
+            'title="This dataset is licensed {{ cookiecutter.space_license }}"'
             f'style="color:#2D31FA;"'
-            f'href="https://huggingface.co/datasets/bigscience-data/{dataset}"'
-            f'target="_blank"><b>{dataset}</b></a><span style="color: #7978FF;">/{docid}</span>'
+            'href="https://huggingface.co/datasets/{{ cookiecutter.emoji }}"'
+            'target="_blank"><b>🔒{{ cookiecutter.dataset_name }}</b></a><span style="color: #7978FF;">/'+f'{docid}</span>'
         )        
     return docid_html
 
@@ -85,83 +82,21 @@ def process_results(results, highlight_terms=[]):
         )
     return results_html + "<hr>"
 
+def search(query, language, num_results=10):
+    searcher = _load_sparse_searcher(language=LANG_MAPPING[language])
 
-def scisearch(query, language, num_results=10):
-    try:
-        query = " ".join(query.split())
-        if query == "" or query is None:
-            return ""
+    t_0 = time.time()
+    search_results = searcher.search(query, k=num_results)
+    search_time = time.time() - t_0
 
-        post_data = {"query": query, "k": num_results}
-        if language != "detect_language":
-            post_data["lang"] = language
+    results_dict ={"text": [], "docid": [], "score":[], "lang": language}
+    for i, result in enumerate(search_results):
+        result = json.loads(result.raw)
+        results_dict["text"].append(result["contents"])
+        results_dict["docid"].append(result["id"])
+        results_dict["score"].append(search_results[i].score)
 
-        output = requests.post(
-            os.environ.get("address"),
-            headers={"Content-type": "application/json"},
-            data=json.dumps(post_data),
-            timeout=60,
-        )
-
-        payload = json.loads(output.text)
-
-        if "err" in payload:
-            if payload["err"]["type"] == "unsupported_lang":
-                detected_lang = payload["err"]["meta"]["detected_lang"]
-                return f"""
-                    <p style='font-size:18px; font-family: Arial; color:MediumVioletRed; text-align: center;'>
-                    Detected language <b>{detected_lang}</b> is not supported.<br>
-                    Please choose a language from the dropdown or type another query.
-                    </p><br><hr><br>"""
-
-        results = payload["results"]
-        highlight_terms = payload["highlight_terms"]
-
-        if language == "detect_language":
-            results = list(results.values())[0]
-            return (
-                (
-                    f"""<p style='font-family: Arial; color:MediumAquaMarine; text-align: center; line-height: 3em'>
-                Detected language: <b>{results[0]["lang"]}</b></p><br><hr><br>"""
-                    if len(results) > 0 and language == "detect_language"
-                    else ""
-                )
-                + process_results(results, highlight_terms)
-            )
-
-        if language == "all":
-            results_html = ""
-            for lang, results_for_lang in results.items():
-                if len(results_for_lang) == 0:
-                    results_html += f"""<p style='font-family: Arial; color:Silver; text-align: left; line-height: 3em'>
-                            No results for language: <b>{lang}</b><hr></p>"""
-                    continue
-
-                collapsible_results = f"""
-                    <details>
-                        <summary style='font-family: Arial; color:MediumAquaMarine; text-align: left; line-height: 3em'>
-                            Results for language: <b>{lang}</b><hr>
-                        </summary>
-                        {process_results(results_for_lang, highlight_terms)}
-                    </details>"""
-                results_html += collapsible_results
-            return results_html
-
-        results = list(results.values())[0]
-        return process_results(results, highlight_terms)
-
-    except Exception as e:
-        results_html = f"""
-                <p style='font-size:18px; font-family: Arial; color:MediumVioletRed; text-align: center;'>
-                Raised {type(e).__name__}</p>
-                <p style='font-size:14px; font-family: Arial; '>
-                Check if a relevant discussion already exists in the Community tab. If not, please open a discussion.
-                </p>
-            """
-        print(e)
-        print(traceback.format_exc())
-
-    return results_html
+    return results_dict, search_time
 
 
 description = """# <p style="text-align: center;"> "{{ cookiecutter.emoji }}" 🔎 {{ cookiecutter.space_title }} search tool 🔍 "{{ cookiecutter.emoji }}" </p>
@@ -201,7 +136,7 @@ if __name__ == "__main__":
             if query is None or query == "":
                 return "", ""
             return {
-                results: scisearch(query, lang, k),
+                results: search(query, lang, k),
             }
 
         query.submit(fn=submit, inputs=[query, lang, k], outputs=[results])

@@ -7,5 +7,7 @@
     "space_license": "apache-2.0",
     "space_pinned": "false",
     "emoji": "🚀",
-    "space_description": null
+    "space_description": null,
+    "private": false,
+    "dataset_name": null,
 }
