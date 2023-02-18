@@ -1,6 +1,6 @@
 ---
 title: {{ cookiecutter.space_title }}
-emoji: 🐠
+emoji: {{ cookiecutter.emoji }}
 colorFrom: blue
 colorTo: blue
 sdk: gradio
