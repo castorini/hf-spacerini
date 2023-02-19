@@ -28,8 +28,7 @@ def create_space_from_local(
         The organization to create the space in.
     delete_after_push : bool, optional
         If True, delete the local directory after pushing it to the Hub.
-    access_token: str, optional
-        A Hugging Face access token
+        
     Returns
     -------
     repo_url: str
