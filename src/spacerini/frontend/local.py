@@ -26,7 +26,7 @@ def create_app(
     None
     """
     cookiecutter(
-        "https://github.com/castorini/hf-spacerini",
+        "https://github.com/castorini/hf-spacerini.git",
         directory="templates/" + template,
         no_input=no_input,
         extra_context=extra_context_dict,
