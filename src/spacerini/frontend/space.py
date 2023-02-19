@@ -29,7 +29,8 @@ def create_space_from_local(
         The organization to create the space in.
     delete_after_push : bool, optional
         If True, delete the local directory after pushing it to the Hub.
-    
+    access_token: str, optional
+        A Hugging Face access token
     Returns
     -------
     repo_url: str
@@ -43,12 +44,12 @@ def create_space_from_local(
         namespace = organization
     repo_id =  namespace + "/" + space_slug
     try:
-        repo_url = create_repo(repo_id=repo_id, repo_type="space", space_sdk=space_sdk, private=private)
+        repo_url = create_repo(repo_id=repo_id, repo_type="space", space_sdk=space_sdk, private=private, token=access_token)
     except Exception as ex:
         logger.error("Encountered an error while creating the space: ", ex)
         raise
         
-    upload_folder(folder_path=local_dir, repo_id=repo_id, repo_type="space")
+    upload_folder(folder_path=local_dir, repo_id=repo_id, repo_type="space", token=access_token)
     if delete_after_push:
         shutil.rmtree(local_dir)
     return repo_url
