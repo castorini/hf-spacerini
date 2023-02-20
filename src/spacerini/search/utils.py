@@ -1,6 +1,13 @@
+from typing import List, Int
 from pyserini.search.lucene import LuceneSearcher
+from datasets import Dataset
 
-def result_indices(query: str, num_results: int, index_path: str, analyzer=None) -> list:
+def result_indices(
+        query: str,
+        num_results: int,
+        index_path: str,
+        analyzer=None
+        ) -> list:
     """
     Get the indices of the results of a query.
     Parameters
@@ -27,24 +34,29 @@ def result_indices(query: str, num_results: int, index_path: str, analyzer=None)
     ix = [int(hit.docid) for hit in hits]
     return ix
 
-def result_page_iterator(hf_dataset: str, result_indices: list, results_per_page: int=10):
+def result_page(
+        hf_dataset: Dataset,
+        result_indices: List[int],
+        page: int = 0,
+        results_per_page: int=10
+        ) -> Dataset:
     """
-    Iterate over the results of a query.
-    Parameters
+    Returns a the ith results page as a datasets.Dataset object. Nothing is loaded into memory. Call `to_pandas()` on the returned Dataset to materialize the table.
     ----------
-    hf_dataset : str
-        The path to the dataset or name of dataset on huggingface.
-    result_indices : list
+    hf_dataset : datasets.Dataset
+        a Hugging Face datasets dataset.
+    result_indices : list of int
         The indices of the results.
+    page: int (default=0)
+        The result page to return. Returns the first page by default.
     results_per_page : int (default=10)
         The number of results per page.
     
     Returns
     -------
-    generator
-        A generator that yields a pandas dataframe of results.
+    datasets.Dataset
+        A results page.
     """
     results = hf_dataset.select(result_indices)
     num_result_pages = int(len(results)/results_per_page) + 1
-    for i in range(num_result_pages):
-        yield results.shard(num_result_pages, i, contiguous=True).to_pandas()
+    return results.shard(num_result_pages, page, contiguous=True)
