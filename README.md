@@ -11,15 +11,15 @@ To get started create an access token with write access on huggingface to enable
 
 Run `huggingface-cli login` to register your access token locally.
 
-### Install from Pypi or Github
+### Install from Github
 
-- `pip install spacerini` or for the latest updates  `pip install git+https://github.com/castorini/hf-spacerini.git`
+- `pip install git+https://github.com/castorini/hf-spacerini.git`
 
 ### Dev Install
 
 - Create a virual environment - `conda create --name spacerini`
 - Clone the repository - `git clone https://github.com/castorini/hf-spacerini.git`
-- pip install .
+- Install in editable mode -`pip install -e ".[dev]"`
 
 ## Creating a simple application 🔎
 
