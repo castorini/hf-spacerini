@@ -11,11 +11,9 @@ To get started create an access token with write access on huggingface to enable
 
 Run `huggingface-cli login` to register your access token locally.
 
-### Install from Pypi or Github
+### Install from Github
 
-- You will very soon be able to use `pip install spacerini` to install Spacerini, but you should until then install from GitHub:
-
-`pip install git+https://github.com/castorini/hf-spacerini.git`
+- `pip install git+https://github.com/castorini/hf-spacerini.git`
 
 ### Dev Install
 
