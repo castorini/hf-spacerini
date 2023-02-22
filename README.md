@@ -19,7 +19,7 @@ Run `huggingface-cli login` to register your access token locally.
 
 - Create a virual environment - `conda create --name spacerini`
 - Clone the repository - `git clone https://github.com/castorini/hf-spacerini.git`
-- pip install -e ".[dev]"
+- `pip install -e ".[dev]"`
 
 ## Creating a simple application 🔎
 
