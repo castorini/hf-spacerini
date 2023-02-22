@@ -60,5 +60,3 @@ def load_index_from_hub(dataset_slug: str, organization: str=None) -> str:
     local_path = snapshot_download(repo_id=repo_id, repo_type="dataset")
     index_path = local_path + "/index"
     return index_path
-
-
