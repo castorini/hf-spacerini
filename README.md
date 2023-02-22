@@ -13,13 +13,15 @@ Run `huggingface-cli login` to register your access token locally.
 
 ### Install from Pypi or Github
 
-- `pip install spacerini` or for the latest updates  `pip install git+https://github.com/castorini/hf-spacerini.git`
+- You will very soon be able to use `pip install spacerini` to install Spacerini, but you should until then install from GitHub:
+
+`pip install git+https://github.com/castorini/hf-spacerini.git`
 
 ### Dev Install
 
 - Create a virual environment - `conda create --name spacerini`
 - Clone the repository - `git clone https://github.com/castorini/hf-spacerini.git`
-- pip install .
+- pip install -e ".[dev]"
 
 ## Creating a simple application 🔎
 
