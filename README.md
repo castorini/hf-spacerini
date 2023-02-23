@@ -22,8 +22,8 @@ Run `huggingface-cli login` to register your access token locally.
 - Install in editable mode -`pip install -e ".[dev]"`
 
 ## Creating a simple application 🔎
-You can deploy a search system for the test set of the Extreme Summatization [XSUM](https://huggingface.co/datasets/xsum) dataset on huggingface using the following command with variables stored in a [config.json](config.json): 
-You can follow the instructions below to create .
+You can deploy a search system for the test set of the Extreme Summatization [XSUM](https://huggingface.co/datasets/xsum) dataset on huggingface using the following command with variables stored in a [`config.json`](config.json): 
+You can follow the instructions below to create the search tool and deplot to huggingface.
 
 ```bash
 spacerini --config-file config.json deploy
