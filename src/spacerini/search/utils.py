@@ -1,4 +1,4 @@
-from typing import List, Int
+from typing import List
 from pyserini.search.lucene import LuceneSearcher
 from datasets import Dataset
 

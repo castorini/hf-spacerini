@@ -1,0 +1,15 @@
+{
+    "delete_after": true,
+    "space_name": "xsum",
+    "space_url_slug": "xsumcli",
+    "sdk": "gradio",
+    "organization": null,
+    "description": null,
+    "columns_to_index": ["document"],
+    "dataset": "xsum",
+    "docid-column": "id",
+    "split": "test",
+    "template": "gradio_roots_temp",
+    "store_raw": true,
+    "store_contents": true
+}
