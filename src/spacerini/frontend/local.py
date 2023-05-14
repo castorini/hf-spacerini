@@ -1,4 +1,8 @@
+from pathlib import Path
+from shutil import copytree
+
 from cookiecutter.main import cookiecutter
+
 
 def create_app(
     template: str,
@@ -34,4 +38,7 @@ def create_app(
         overwrite_if_exists=overwrite_if_exists,
     )
 
+    utils_dir = Path(__file__).parent.resolve() / "spacerini_utils"
+    copytree(utils_dir, output_dir)
+    
     return None

@@ -32,6 +32,7 @@ def get_args() -> argparse.Namespace:
     space_args.add_argument("--template", default="streamlit", help="A directory containing a project template directory, or a URL to a git repository.")
     space_args.add_argument("--organization", required=False, help="Organization to deploy new space under.")
     space_args.add_argument("--description", help="Description of new space")
+    space_args.add_argument("--private", action="store_true", help="Deploy private Spaces application")
 
     data_args = parser.add_argument_group("Data arguments")
     data_args.add_argument("--columns-to-index", nargs="+", default="content", help="Column to index in dataset")
@@ -39,25 +40,34 @@ def get_args() -> argparse.Namespace:
     data_args.add_argument("--dataset", type=bool, required=False, help="Local dataset folder or Huggingface name")
     data_args.add_argument("--docid-column", default="id", help="Name of docid column in dataset")
     data_args.add_argument("--language", default="en", help="ISO Code for language of dataset")
-
-    index_args = parser.add_argument_group("Index arguments")
-    index_args.add_argument("--collection", type=str, help="Collection class")
-    index_args.add_argument("--memory_buffer", type=str, help="Memory buffer size")
-    index_args.add_argument("--threads", type=int, default=5, help="Number of threads to use for indexing")
-    index_args.add_argument("--use_hf_tokenizer", type=bool, default=False, help="If True, use HuggingFace tokenizer to tokenize dataset")
-    index_args.add_argument("--pretokenized", type=bool, default=False, help="If True, dataset is already tokenized")
-    index_args.add_argument("--store-positions", default=False, help="If True, store document vectors in index")
-    index_args.add_argument("--store-docvectors", default=False, help="If True, store document vectors in index")
-    index_args.add_argument("--store-contents", default=False, help="If True, store contents of documents in index")
-    index_args.add_argument("--store-raw", default=False, help="If True, store raw contents of documents in index")
-    index_args.add_argument("--keep-stopwords", type=bool, default=False, help="If True, keep stopwords in index")
-    index_args.add_argument("--optimize-index", type=bool, help="If True, optimize index after indexing is complete")
-    index_args.add_argument("--stopwords", type=str, help="Path to stopwords file")
-    index_args.add_argument("--stemmer", type=str, nargs=1, choices=["porter", "krovetz"], help="Stemmer to use for indexing")
     
+    sparse_index_args = parser.add_argument_group("Sparse Index arguments")
+    sparse_index_args.add_argument("--collection", type=str, help="Collection class")
+    sparse_index_args.add_argument("--memory_buffer", type=str, help="Memory buffer size")
+    sparse_index_args.add_argument("--threads", type=int, default=5, help="Number of threads to use for indexing")
+    sparse_index_args.add_argument("--use_hf_tokenizer", type=bool, default=False, help="If True, use HuggingFace tokenizer to tokenize dataset")
+    sparse_index_args.add_argument("--pretokenized", type=bool, default=False, help="If True, dataset is already tokenized")
+    sparse_index_args.add_argument("--store-positions", default=False, help="If True, store document vectors in index")
+    sparse_index_args.add_argument("--store-docvectors", default=False, help="If True, store document vectors in index")
+    sparse_index_args.add_argument("--store-contents", default=False, help="If True, store contents of documents in index")
+    sparse_index_args.add_argument("--store-raw", default=False, help="If True, store raw contents of documents in index")
+    sparse_index_args.add_argument("--keep-stopwords", type=bool, default=False, help="If True, keep stopwords in index")
+    sparse_index_args.add_argument("--optimize-index", type=bool, help="If True, optimize index after indexing is complete")
+    sparse_index_args.add_argument("--stopwords", type=str, help="Path to stopwords file")
+    sparse_index_args.add_argument("--stemmer", type=str, nargs=1, choices=["porter", "krovetz"], help="Stemmer to use for indexing")
+    
+    dense_index_args = parser.add_argument_group("Dense Index arguments")
+
+    
+    search_args = parser.add_argument_group("Search arguments")
+    search_args.add_argument("--bm25_k1", type=float, help="BM25: k1 parameter")
+    search_args.add_argument("--bm24_b", type=float, help="BM25: b parameter")
+
     args, _ = parser.parse_known_args()
     if args.config_file:
         config = json.load(open(args.config_file, "r"))
+        config = {k.replace("-", "_"): v for k,v in config.items()}
+        
         args_dict = vars(args)
         args_dict.update(config)
     
@@ -100,7 +110,8 @@ def main():
             organization=args.organization,
             space_sdk=args.sdk,
             local_dir=local_app_dir,
-            delete_after_push=args.delete_after
+            delete_after_push=args.delete_after,
+            private=args.private
         )
 
 

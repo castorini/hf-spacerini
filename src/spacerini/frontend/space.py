@@ -1,8 +1,11 @@
-from huggingface_hub import HfApi, create_repo, upload_folder
-import shutil
 import logging
+import shutil
+
+from huggingface_hub import HfApi, create_repo, upload_folder
+
 
 logger = logging.getLogger(__name__)
+
 
 def create_space_from_local(
     space_slug: str,

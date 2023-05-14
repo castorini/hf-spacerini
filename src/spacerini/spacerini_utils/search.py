@@ -1,12 +1,10 @@
-from enum import Enum
-from typing import Dict
+import json
 from typing import List
 from typing import Literal
 from typing import Protocol
 from typing import TypedDict
 from typing import Union
 
-from datasets import Dataset
 from pyserini.analysis import get_lucene_analyzer
 from pyserini.search import DenseSearchResult
 from pyserini.search import JLuceneSearcherResult
@@ -15,7 +13,7 @@ from pyserini.search.faiss import FaissSearcher
 from pyserini.search.hybrid import HybridSearcher
 from pyserini.search.lucene import LuceneSearcher
 
-Encoder = Literal["dkrr", "dpr", "tct_colbert", "ance", "sentence", "contriever", "auto"]
+EncoderClass = Literal["dkrr", "dpr", "tct_colbert", "ance", "sentence", "contriever", "auto"]
 
 
 class AnalyzerArgs(TypedDict):
@@ -24,6 +22,13 @@ class AnalyzerArgs(TypedDict):
     stemmer: str
     stopwords: bool
     huggingFaceTokenizer: str
+
+
+class SearchResult(TypedDict):
+    docid: str
+    text: str
+    score: float
+    language: str
 
 
 class Searcher(Protocol):
@@ -38,7 +43,7 @@ def init_searcher(
     analyzer_args: AnalyzerArgs = None,
     dense_index_path: str = None,
     encoder_name_or_path: str = None,
-    encoder_class: Encoder = None, 
+    encoder_class: EncoderClass = None, 
     tokenizer_name: str = None,
     device: str = None,
     prefix: str = None
@@ -62,10 +67,10 @@ def init_searcher(
         Device to load Query encoder on. 
     prefix: str
         Query prefix if exists
-
+    
     Returns
     -------
-    Searcher: 
+    Searcher: FaissSearcher | HybridSearcher | LuceneSearcher
         A sparse, dense or hybrid searcher
     """
     if sparse_index_path:
@@ -98,63 +103,28 @@ def init_searcher(
     return ssearcher
 
 
-def result_indices(
-        query: str,
-        num_results: int,
-        searcher: Searcher,
-        index_path: str,
-        analyzer=None
-        ) -> list:
+def _search(searcher: Searcher, query: str, num_results: int = 10) -> List[SearchResult]:
     """
-    Get the indices of the results of a query.
-    Parameters
-    ----------
-    query : str
-        The query.
-    num_results : int
-        The number of results to return.
-    index_path : str
-        The path to the index.
-    analyzer : str (default=None)
-        The analyzer to use.
+    Parameters:
+    -----------
+    searcher: FaissSearcher | HybridSearcher | LuceneSearcher
+        A sparse, dense or hybrid searcher
+    query: str
+        Query for which to retrieve results
+    num_results: int
+        Maximum number of results to retrieve
     
-    Returns
-    -------
-    list
-        The indices of the returned documents.
+    Returns:
+    --------
+    Dict: 
     """
-    # searcher.search()
-    # searcher = LuceneSearcher(index_path)
-    # if analyzer is not None:
-    #     searcher.set_analyzer(analyzer)
-    hits = searcher.search(query, k=num_results)
-    ix = [int(hit.docid) for hit in hits]
-    return ix
+    search_results = searcher.search(query, k=num_results)
+    all_results = [
+        SearchResult(
+            docid=result["id"],
+            text=result["conents"],
+            score=search_results[idx].score   
+        ) for idx, result in enumerate(map(lambda r: json.loads(r.raw), search_results))
+    ]
 
-
-def result_page(
-        hf_dataset: Dataset,
-        result_indices: List[int],
-        page: int = 0,
-        results_per_page: int=10
-        ) -> Dataset:
-    """
-    Returns a the ith results page as a datasets.Dataset object. Nothing is loaded into memory. Call `to_pandas()` on the returned Dataset to materialize the table.
-    ----------
-    hf_dataset : datasets.Dataset
-        a Hugging Face datasets dataset.
-    result_indices : list of int
-        The indices of the results.
-    page: int (default=0)
-        The result page to return. Returns the first page by default.
-    results_per_page : int (default=10)
-        The number of results per page.
-    
-    Returns
-    -------
-    datasets.Dataset
-        A results page.
-    """
-    results = hf_dataset.select(result_indices)
-    num_result_pages = int(len(results)/results_per_page) + 1
-    return results.shard(num_result_pages, page, contiguous=True)
+    return all_results
