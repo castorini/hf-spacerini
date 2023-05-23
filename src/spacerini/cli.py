@@ -6,6 +6,7 @@ from pathlib import Path
 
 from spacerini.frontend import create_app, create_space_from_local
 from spacerini.index import index_streaming_dataset
+from spacerini.index.encode import encode_json_dataset
 
 
 def get_args() -> argparse.Namespace:
@@ -15,6 +16,8 @@ def get_args() -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         epilog="Written by: Akintunde 'theyorubayesian' Oladipo <akin.o.oladipo@gmail.com>, Christopher Akiki <christopher.akiki@gmail.com>, Odunayo Ogundepo <ogundepoodunayo@gmail.com>"
     )
+    parser.add_argument("--space-name", required=False)
+    parser.add_argument("--index-type", type=str, choices=["sparse", "dense", "hybrid"], help="Type of index to create and/or deploy")
     parser.add_argument("--config-file", type=str, help="Path to configuration for space")
     parser.add_argument("--verbose", type=bool, default=True, help="If True, print verbose output")
 
@@ -24,32 +27,34 @@ def get_args() -> argparse.Namespace:
     deploy_parser = sub_parser.add_parser("deploy", help="Deploy new space.")
     deploy_parser.add_argument("--delete-after", type=bool, default=False, help="If True, delete the local directory after pushing it to the Hub.")
 
-    space_args = deploy_parser.add_argument_group("Space arguments")
-    space_args.add_argument("--space-name", required=False)
+    space_args = parser.add_argument_group("Space arguments")
     space_args.add_argument("--space-title", required=False, help="Title to show on Space")
     space_args.add_argument("--space-url-slug", required=False, help="")
-    space_args.add_argument("--sdk", default="gradio", nargs=1, choices=["gradio", "streamlit"])
+    space_args.add_argument("--sdk", default="gradio", choices=["gradio", "streamlit"])
     space_args.add_argument("--template", default="streamlit", help="A directory containing a project template directory, or a URL to a git repository.")
     space_args.add_argument("--organization", required=False, help="Organization to deploy new space under.")
-    space_args.add_argument("--description", help="Description of new space")
+    space_args.add_argument("--description", type=str, help="Description of new space")
     space_args.add_argument("--private", action="store_true", help="Deploy private Spaces application")
 
     data_args = parser.add_argument_group("Data arguments")
-    data_args.add_argument("--columns-to-index", nargs="+", default="content", help="Column to index in dataset")
-    data_args.add_argument("--split", type=bool, required=False, default="train", help="Mode to open output file. Some modes overwrite existing file")
-    data_args.add_argument("--dataset", type=bool, required=False, help="Local dataset folder or Huggingface name")
+    data_args.add_argument("--columns-to-index", default=[], action="store", nargs="*", help="Other columns to index in dataset")
+    data_args.add_argument("--split", type=str, required=False, default="train", help="Dataset split to index")
+    data_args.add_argument("--dataset", type=str, required=False, help="Local dataset folder or Huggingface name")
     data_args.add_argument("--docid-column", default="id", help="Name of docid column in dataset")
     data_args.add_argument("--language", default="en", help="ISO Code for language of dataset")
-    
+    data_args.add_argument("--title-column", type=str, help="Name of title column in data")
+    data_args.add_argument("--content-column", type=str, default="content", help="Name of content column in data")
+    data_args.add_argument("--expand-column", type=str, help="Name of column containing document expansion")
+
     sparse_index_args = parser.add_argument_group("Sparse Index arguments")
     sparse_index_args.add_argument("--collection", type=str, help="Collection class")
-    sparse_index_args.add_argument("--memory_buffer", type=str, help="Memory buffer size")
+    sparse_index_args.add_argument("--memory-buffer", type=str, help="Memory buffer size")
     sparse_index_args.add_argument("--threads", type=int, default=5, help="Number of threads to use for indexing")
-    sparse_index_args.add_argument("--use_hf_tokenizer", type=bool, default=False, help="If True, use HuggingFace tokenizer to tokenize dataset")
+    sparse_index_args.add_argument("--use-hf-tokenizer", type=bool, default=False, help="If True, use HuggingFace tokenizer to tokenize dataset")
     sparse_index_args.add_argument("--pretokenized", type=bool, default=False, help="If True, dataset is already tokenized")
-    sparse_index_args.add_argument("--store-positions", default=False, help="If True, store document vectors in index")
-    sparse_index_args.add_argument("--store-docvectors", default=False, help="If True, store document vectors in index")
-    sparse_index_args.add_argument("--store-contents", default=False, help="If True, store contents of documents in index")
+    sparse_index_args.add_argument("--store-positions", action="store_true", help="If True, store document vectors in index")     # TODO: @theyorubayesian
+    sparse_index_args.add_argument("--store-docvectors", action="store_true", help="If True, store document vectors in index")    # TODO: @theyorubayesian
+    sparse_index_args.add_argument("--store-contents", action="store_true", help="If True, store contents of documents in index")
     sparse_index_args.add_argument("--store-raw", default=False, help="If True, store raw contents of documents in index")
     sparse_index_args.add_argument("--keep-stopwords", type=bool, default=False, help="If True, keep stopwords in index")
     sparse_index_args.add_argument("--optimize-index", type=bool, help="If True, optimize index after indexing is complete")
@@ -57,8 +62,19 @@ def get_args() -> argparse.Namespace:
     sparse_index_args.add_argument("--stemmer", type=str, nargs=1, choices=["porter", "krovetz"], help="Stemmer to use for indexing")
     
     dense_index_args = parser.add_argument_group("Dense Index arguments")
+    dense_index_args.add_argument("--encoder-name-or-path", type=str, help="Encoder name or path")
+    dense_index_args.add_argument("--encoder-class", default="auto", type=str, choices=["dpr", "bpr", "tct_colbert", "ance", "sentence-transformers", "auto"], help="Encoder to use")
+    dense_index_args.add_argument("--delimiter", default="\n", type=str, help="Delimiter for the fields in encoded corpus")
+    dense_index_args.add_argument("--index-shard-id", default=0, type=int, help="Zero-based index shard id")
+    dense_index_args.add_argument("--n-index-shards", type=int, default=1, help="Number of index shards")
+    dense_index_args.add_argument("--batch-size", default=64, type=int, help="Batch size for encoding")
+    dense_index_args.add_argument("--max-length", type=int, default=256, help="Max document length to encode")
+    dense_index_args.add_argument('--device', default='cuda:0', type=str, help='Device: cpu or cuda [cuda:0, cuda:1...]', required=False)
+    dense_index_args.add_argument("--dimension", default=768, type=int, help="Dimension for Faiss Index")
+    dense_index_args.add_argument("--add-sep", action="store_true", help="Pass `title` and `content` columns separately into encode function")
+    dense_index_args.add_argument("--to-faiss", action="store_true", help="Store embeddings in Faiss Index")
+    dense_index_args.add_argument("--fp16", action="store_true", help="Use FP 16")
 
-    
     search_args = parser.add_argument_group("Search arguments")
     search_args.add_argument("--bm25_k1", type=float, help="BM25: k1 parameter")
     search_args.add_argument("--bm24_b", type=float, help="BM25: b parameter")
@@ -76,32 +92,62 @@ def get_args() -> argparse.Namespace:
 
 def main():
     args = get_args()
-    cookiecutter_vars = {
-        "dset_text_field": args.columns_to_index, 
-        "space_title": args.space_title, 
-        "local_app": args.space_name,
-        "space_description": args.description, 
-        "dataset_name": args.dataset
-    }
 
     local_app_dir = Path(f"apps/{args.space_name}")
 
-    if args.command in ["index", "create", "deploy"]:
+    if args.command in ["index", "create-space", "deploy"]:       
         logging.info(f"Indexing {args.dataset} dataset into {str(local_app_dir)}")
-        index_streaming_dataset(
-            dataset_name_or_path=args.dataset,
-            index_path=str(local_app_dir / "index"),
-            split=args.split,
-            column_to_index=args.columns_to_index,
-            doc_id_column=args.docid_column,
-            language=args.language,
-            storeContents=args.store_contents,
-            storeRaw=args.store_raw
-        )
+
+        columns = [args.content_column, *args.columns_to_index]
+
+        if args.index_type in ["sparse", "hybrid"]:
+            index_streaming_dataset(
+                dataset_name_or_path=args.dataset,
+                index_path=(local_app_dir / "sparse_index").as_posix(),
+                split=args.split,
+                column_to_index=columns,
+                doc_id_column=args.docid_column,
+                language=args.language,
+                storeContents=args.store_contents,
+                storeRaw=args.store_raw
+            )
+
+        if args.index_type in ["dense", "hybrid"]:
+            encode_json_dataset(
+                data_path=args.dataset,
+                encoder_name_or_path=args.encoder_name_or_path,
+                encoder_class=args.encoder_class,
+                embedding_dir=(local_app_dir / "dense_index").as_posix(),
+                batch_size=args.batch_size,
+                device=args.device,
+                index_shard_id=args.index_shard_id,
+                num_index_shards=args.n_index_shards,
+                delimiter=args.delimiter,
+                max_length=args.max_length,
+                add_sep=args.add_sep,
+                title_column_to_encode=args.title_column,
+                text_column_to_encode=args.content_column,
+                expand_column_to_encode=args.expand_column,
+                output_to_faiss=True,
+                embedding_dimension=args.dimension,
+                fp16=args.fp16
+            )
     
-    if args.command in ["create", "deploy"]:
+    if args.command in ["create-space", "deploy"]:
         logging.info(f"Creating local app into {args.space_name} directory")
-        create_app(template=args.template, extra_context_dict=cookiecutter_vars, output_dir="apps")
+        cookiecutter_vars = {
+            "dset_text_field": columns, 
+            "space_title": args.space_title, 
+            "local_app": args.space_name,
+            "space_description": args.description, 
+            "dataset_name": args.dataset
+        }
+
+        create_app(
+            template=args.template, 
+            extra_context_dict=cookiecutter_vars, 
+            output_dir="apps"
+        )
 
     if args.command == "deploy":
         logging.info(f"Creating space {args.space_name} on {args.organization}")

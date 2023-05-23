@@ -3,6 +3,7 @@ from datasets import Dataset
 from datasets.utils.py_utils import convert_file_size_to_int
 import os
 
+
 def shard_dataset(hf_dataset: Dataset, shard_size: Union[int, str], shards_paths: str, column_to_index: str) -> None: # TODO break this up into smaller functions
     """
     Shard a dataset into multiple files.
@@ -29,6 +30,7 @@ def shard_dataset(hf_dataset: Dataset, shard_size: Union[int, str], shards_paths
     for shard_index in range(num_shards):
         shard = hf_dataset.shard(num_shards=num_shards, index=shard_index, contiguous=True)
         shard.to_json(f"{shards_paths}/docs-{shard_index:03d}.jsonl", orient="records", lines=True)
+
 
 def get_num_shards(dataset_size: Union[int, str], max_shard_size: Union[int, str]) -> int:
     """
