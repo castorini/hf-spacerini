@@ -19,7 +19,7 @@ class TestIndex(unittest.TestCase):
         Test indexing a local dataset
         """
         local_index_path = path.join(self.index_path, "local")
-        index_streaming_hf_dataset(
+        index_streaming_dataset(
             index_path=local_index_path,
             dataset_name_or_path=self.dataset_name_or_path,
             split="train",

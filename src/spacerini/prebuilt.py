@@ -1,0 +1,3 @@
+EXAMPLES = {
+    'xsum',
+}

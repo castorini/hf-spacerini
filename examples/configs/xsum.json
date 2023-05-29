@@ -5,7 +5,7 @@
     "sdk": "gradio",
     "organization": null,
     "description": null,
-    "columns_to_index": ["document"],
+    "content_column": "document",
     "dataset": "xsum",
     "docid-column": "id",
     "split": "test",

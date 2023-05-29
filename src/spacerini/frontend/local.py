@@ -3,6 +3,9 @@ from shutil import copytree
 
 from cookiecutter.main import cookiecutter
 
+default_templates_dir = (Path(__file__).parents[3] / "templates").resolve()
+LOCAL_TEMPLATES = [template.name for template in default_templates_dir.glob("*/")]
+
 
 def create_app(
     template: str,
@@ -30,8 +33,8 @@ def create_app(
     None
     """
     cookiecutter(
-        "https://github.com/castorini/hf-spacerini.git",    # TODO: Allow external templates?
-        directory="templates/" + template,
+        "https://github.com/castorini/hf-spacerini.git/" if template in LOCAL_TEMPLATES else template,
+        directory="templates/" + template if template in LOCAL_TEMPLATES else None,
         no_input=no_input,
         extra_context=extra_context_dict,
         output_dir=output_dir,

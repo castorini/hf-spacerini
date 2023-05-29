@@ -1,13 +1,9 @@
 import json
-from typing import List
-from typing import Literal
-from typing import Protocol
-from typing import TypedDict
-from typing import Union
+from typing import List, Literal, Protocol, Tuple, TypedDict, Union
 
 from pyserini.analysis import get_lucene_analyzer
-from pyserini.search import DenseSearchResult
-from pyserini.search import JLuceneSearcherResult
+from pyserini.index import IndexReader
+from pyserini.search import DenseSearchResult, JLuceneSearcherResult
 from pyserini.search.faiss.__main__ import init_query_encoder
 from pyserini.search.faiss import FaissSearcher
 from pyserini.search.hybrid import HybridSearcher
@@ -36,7 +32,7 @@ class Searcher(Protocol):
         ...
 
 
-def init_searcher(
+def init_searcher_and_reader(
     sparse_index_path: str = None,
     bm25_k1: float = None,
     bm25_b: float = None,
@@ -47,7 +43,7 @@ def init_searcher(
     tokenizer_name: str = None,
     device: str = None,
     prefix: str = None
-) -> Union[FaissSearcher, HybridSearcher, LuceneSearcher]:
+) -> Tuple[Union[FaissSearcher, HybridSearcher, LuceneSearcher], IndexReader]:
     """
     Initialize and return an approapriate searcher
     
@@ -73,6 +69,7 @@ def init_searcher(
     Searcher: FaissSearcher | HybridSearcher | LuceneSearcher
         A sparse, dense or hybrid searcher
     """
+    reader = None
     if sparse_index_path:
         ssearcher = LuceneSearcher(sparse_index_path)
         if analyzer_args:
@@ -92,18 +89,19 @@ def init_searcher(
             prefix=prefix
         )
 
+        reader = IndexReader(sparse_index_path)
         dsearcher = FaissSearcher(dense_index_path, encoder)
 
         if sparse_index_path:
             hsearcher = HybridSearcher(dense_searcher=dsearcher, sparse_searcher=ssearcher)
-            return hsearcher
+            return hsearcher, reader
         else:
-            return dsearcher
+            return dsearcher, reader
     
-    return ssearcher
+    return ssearcher, reader
 
 
-def _search(searcher: Searcher, query: str, num_results: int = 10) -> List[SearchResult]:
+def _search(searcher: Searcher, reader: IndexReader, query: str, num_results: int = 10) -> List[SearchResult]:
     """
     Parameters:
     -----------
@@ -116,15 +114,22 @@ def _search(searcher: Searcher, query: str, num_results: int = 10) -> List[Searc
     
     Returns:
     --------
-    Dict: 
+    Dict:
     """
+    def _get_dict(r: Union[DenseSearchResult, JLuceneSearcherResult]):
+        if isinstance(r, JLuceneSearcherResult):
+            return json.loads(r.raw)
+        elif isinstance(r, DenseSearchResult):
+            # Get document from sparse_index using index reader
+            return json.loads(reader.doc(r.docid).raw())
+    
     search_results = searcher.search(query, k=num_results)
     all_results = [
         SearchResult(
             docid=result["id"],
-            text=result["conents"],
+            text=result["contents"],
             score=search_results[idx].score   
-        ) for idx, result in enumerate(map(lambda r: json.loads(r.raw), search_results))
+        ) for idx, result in enumerate(map(lambda r: _get_dict(r), search_results))
     ]
 
     return all_results

@@ -1,38 +1,34 @@
-from typing import List
-from typing import NewType
-from typing import Optional
-from typing import Union
+from typing import List, NewType, Optional, Union
 
 import gradio as gr
 
-from spacerini.spacerini_utils.index import fetch_index_stats
-from spacerini.spacerini_utils.search import _search
-from spacerini.spacerini_utils.search import init_searcher  # TODO: @theyorubayesian
-from spacerini.spacerini_utils.search import SearchResult
+from spacerini_utils.index import fetch_index_stats
+from spacerini_utils.search import _search, init_searcher, SearchResult
 
 HTML = NewType('HTML', str)
 
-searcher = init_searcher(sparse_index_path="index")
-
+searcher = init_searcher(sparse_index_path="sparse_index")
 
 def get_docid_html(docid: Union[int, str]) -> HTML:
-    if "{{cookiecutter.private }}":
-        docid_html = (
-            f"<a "
-            f'class="underline-on-hover"'
-            f'style="color:#AA4A44;"'
-            'href="https://huggingface.co/datasets/{{ cookiecutter.dataset_name }}"'
-            'target="_blank"><b>🔒{{ cookiecutter.dataset_name }}</b></a><span style="color: #7978FF;">/'+f'{docid}</span>'
-        )
-    else:
-        docid_html = (
+    {% if cookiecutter.private -%}
+    docid_html = (
+        f"<a "
+        f'class="underline-on-hover"'
+        f'style="color:#AA4A44;"'
+        'href="https://huggingface.co/datasets/{{ cookiecutter.dataset_name }}"'
+        'target="_blank"><b>🔒{{ cookiecutter.dataset_name }}</b></a><span style="color: #7978FF;">/'+f'{docid}</span>'
+    )
+    {%- else -%}
+    docid_html = (
             f"<a "
             f'class="underline-on-hover"'
             'title="This dataset is licensed {{ cookiecutter.space_license }}"'
             f'style="color:#2D31FA;"'
             'href="https://huggingface.co/datasets/{{ cookiecutter.emoji }}"'
             'target="_blank"><b>🔒{{ cookiecutter.dataset_name }}</b></a><span style="color: #7978FF;">/'+f'{docid}</span>'
-        )        
+        ) 
+    {%- endif %}
+
     return docid_html
 
 
@@ -72,12 +68,12 @@ def process_results(results: List[SearchResult], language: str, highlight_terms:
     return results_html + "<hr>"
 
 
-def search(query, language, num_results=10) -> HTML:
+def search(query: str, language: str, num_results: int = 10) -> HTML:
     results_dict = _search(searcher, query, num_results=num_results)
     return process_results(results_dict, language)
 
 
-stats = fetch_index_stats('index/')
+stats = fetch_index_stats('sparse_index/')
 
 description = f"""# <h2 style="text-align: center;"> {{ cookiecutter.emoji }} 🔎 {{ cookiecutter.space_title }} 🔍 {{ cookiecutter.emoji }} </h2>
 <p style="text-align: center;font-size:15px;">{{ cookiecutter.space_description}}</p>
@@ -110,7 +106,7 @@ with demo:
         results = gr.HTML(label="Results")
 
 
-    def submit(query, lang, k):
+    def submit(query: str, lang: str, k: int):
         query = query.strip()
         if query is None or query == "":
             return "", ""
