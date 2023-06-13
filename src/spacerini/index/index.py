@@ -4,18 +4,13 @@ from typing import Literal
 
 import shutil
 from pyserini.index.lucene import LuceneIndexer, IndexReader
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 from pyserini.pyclass import autoclass
 from tqdm import tqdm
 import json
 import os
 
-from spacerini.data import load_from_hub, load_from_pandas, load_ir_dataset, load_ir_dataset_streaming, \
-    load_from_local
-
-"""
-Descritiption of all the params used in this file
-"""
+from spacerini.data import load_from_hub, load_from_local
 
 
 def parse_args(
@@ -191,7 +186,7 @@ def index_streaming_dataset(
 
     for i, row in tqdm(enumerate(ds), total=num_rows, disable=disable_tqdm):
         contents = " ".join([row[column] for column in column_to_index])
-        indexer.add(json.dumps({"id": i if not doc_id_column else row[doc_id_column] , "contents": contents}))
+        indexer.add_doc_raw(json.dumps({"id": i if not doc_id_column else row[doc_id_column] , "contents": contents}))
 
     indexer.close()
 

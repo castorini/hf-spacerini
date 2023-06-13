@@ -31,7 +31,7 @@ def push_index_to_hub(
     repo_url: str
         The URL of the dataset.
     """
-
+    
     if organization is None:
         hf_api = HfApi()
         namespace = hf_api.whoami()["name"]
@@ -49,6 +49,7 @@ def push_index_to_hub(
         shutil.rmtree(index_path)
     return repo_url
 
+
 def load_index_from_hub(dataset_slug: str, organization: str=None) -> str:
     if organization is None:
         hf_api = HfApi()
@@ -60,5 +61,3 @@ def load_index_from_hub(dataset_slug: str, organization: str=None) -> str:
     local_path = snapshot_download(repo_id=repo_id, repo_type="dataset")
     index_path = local_path + "/index"
     return index_path
-
-

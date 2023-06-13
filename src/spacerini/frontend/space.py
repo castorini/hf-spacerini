@@ -1,8 +1,11 @@
-from huggingface_hub import HfApi, create_repo, upload_folder
-import shutil
 import logging
+import shutil
+
+from huggingface_hub import HfApi, create_repo, upload_folder
+
 
 logger = logging.getLogger(__name__)
+
 
 def create_space_from_local(
     space_slug: str,
@@ -42,7 +45,7 @@ def create_space_from_local(
         namespace = organization
     repo_id =  namespace + "/" + space_slug
     try:
-        repo_url = create_repo(repo_id=repo_id, repo_type="space", space_sdk=space_sdk, private=private)
+        repo_url = create_repo(repo_id=repo_id, repo_type="space", space_sdk=space_sdk, private=private, exist_ok=True)
     except Exception as ex:
         logger.error("Encountered an error while creating the space: ", ex)
         raise

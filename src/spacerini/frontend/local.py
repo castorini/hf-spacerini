@@ -1,10 +1,17 @@
+from pathlib import Path
+from shutil import copytree
+
 from cookiecutter.main import cookiecutter
+
+default_templates_dir = (Path(__file__).parents[3] / "templates").resolve()
+LOCAL_TEMPLATES = [template.name for template in default_templates_dir.glob("*/")]
+
 
 def create_app(
     template: str,
     extra_context_dict: dict,
     output_dir: str,
-    no_input: bool=True,
+    no_input: bool = True,
     overwrite_if_exists: bool=True
     ) -> None:
     """
@@ -26,12 +33,16 @@ def create_app(
     None
     """
     cookiecutter(
-        "https://github.com/castorini/hf-spacerini.git",
-        directory="templates/" + template,
+        "https://github.com/castorini/hf-spacerini.git/" if template in LOCAL_TEMPLATES else template,
+        directory="templates/" + template if template in LOCAL_TEMPLATES else None,
         no_input=no_input,
         extra_context=extra_context_dict,
         output_dir=output_dir,
         overwrite_if_exists=overwrite_if_exists,
     )
 
+    utils_dir = Path(__file__).parents[1].resolve() / "spacerini_utils"
+    app_dir = Path(output_dir) / extra_context_dict["local_app"] / "spacerini_utils"
+    copytree(utils_dir, app_dir, dirs_exist_ok=True)
+    
     return None
