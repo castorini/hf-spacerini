@@ -4,7 +4,7 @@ from shutil import copytree
 from cookiecutter.main import cookiecutter
 
 default_templates_dir = (Path(__file__).parents[3] / "templates").resolve()
-LOCAL_TEMPLATES = [template.name for template in default_templates_dir.glob("*/")]
+LOCAL_TEMPLATES = ["gradio", "streamlit", "gradio_roots_temp"]
 
 
 def create_app(
