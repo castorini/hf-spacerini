@@ -3,7 +3,7 @@
     "metadata_field": null,
     "space_title": null,
     "local_app": "{{ cookiecutter.space_title|lower|replace(' ', '-') }}",
-    "space_gradio_sdk_version": "3.12.0",
+    "space_gradio_sdk_version": "3.29.0",
     "space_license": "apache-2.0",
     "space_pinned": "false"
 }
